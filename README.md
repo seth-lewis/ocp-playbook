@@ -12,7 +12,7 @@ Ansible Playbook for Installing OCP on vSphere, version 0.1.0. Expect scripts in
 ## example 
 ```
 ansible-playbook -i inventory.cfg -u <remote_user_name> \
--e ansible_become_pass=<remote_sudo_password> vOCP-Configure-playbook.yml
+    -e ansible_become_pass=<remote_sudo_password> vOCP-Configure-playbook.yml
 ```
 #### How To / Notes
 1. At this time, this playbook will not set up your loadbalancer. There is a sample `haproxy.cfg` included, however it is for if you only have one load balancer. Many have multiple LBs, which is why I havent added that into the playbook just yet.
