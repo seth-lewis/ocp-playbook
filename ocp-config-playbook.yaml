@@ -1,4 +1,18 @@
 ---
+-   hosts: balancer
+    vars:
+        local_haproxy_config: "haproxy.cfg" # local version of file, feel to rename
+    tasks:
+    -   name: Copy Haproxy Config
+        copy:
+            src: "{{ local_haproxy_config }}"
+            dest: "/etc/haproxy/haproxy.cfg"
+            mode: "644" # ensures standard access isnt changed during the copy
+            become: yes
+    -   name: Start service 'haproxy', if not started
+        service:
+            name: haproxy
+            state: restarted
 -   hosts: installer
     vars:
         personal_dirname: "<Replace With dirname, ie 'seth'>" # will become the name of folder on installer VM
