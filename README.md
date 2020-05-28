@@ -3,10 +3,10 @@ Ansible Playbook for Installing OCP on vSphere, version 0.1.0. Expect scripts in
 
 
 ## Assumptions & Requirements
-1. You are attempting to do this install on **_VMware vSphere_**
+1. You are attempting to do this install on **_VMware vSphere_** under CSPLAB
 1. This playbook assumes you have ansible installed on the local machine you are running the playbook from
 1. This playbook also assumes you can ssh in to your remote machine without a password (using ssh keys, see here)
-1. Replace all `<text_here>` blocks including the `<` & `>` characters where found in the script with application information to your machines. Any surrounding quote marks are intentional.
+1. Replace all `<text_here>` blocks including the `<` & `>` characters where found in each file. Any surrounding quote marks are intentional.
     1. To make life easy, search each file for `<`, that character is only used where text is being replaced
 
 ## example 
