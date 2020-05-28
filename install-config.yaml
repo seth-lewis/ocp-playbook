@@ -9,7 +9,7 @@ controlPlane:
   name: master
   replicas: 3
 metadata:
-  name: seth
+  name: AUTOREPLACE_PERSONAL_DIRNAME # will be replaced automatically by the playbook
 platform:
   vsphere:
     vcenter: vcsa.csplab.local
@@ -18,4 +18,4 @@ platform:
     datacenter: CSPLAB
     defaultDatastore: SANDBOX_TIER4
 pullSecret: '<Contents Of Your Pull Secret>'
-sshKey: 'KEYGEN_HERE'
+sshKey: 'AUTOREPLACE_KEYGEN' # will be replaced automatically by the playbook

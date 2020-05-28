@@ -73,10 +73,15 @@
         copy: 
             src: "{{ local_install_config }}"
             dest: "/opt/{{ personal_dirname }}/install-config.yaml"
-    -   name: Replace Temp Key with Actual Key
+    -   name: Replace Name Placeholder with Project Dirname
         replace:
             path: "/opt/{{ personal_dirname }}/install-config.yaml"
-            regexp: "REPLACE_WITH_KEYGEN"
+            regexp: "AUTOREPLACE_PERSONAL_DIRNAME"
+            replace: "{{ personal_dirname }}"
+    -   name: Replace Key Placeholder with Actual Key
+        replace:
+            path: "/opt/{{ personal_dirname }}/install-config.yaml"
+            regexp: "AUTOREPLACE_KEYGEN"
             replace: "{{ copied_pub_key }}"
     -   name: Unset Copied Key from RAM
         set_fact:
