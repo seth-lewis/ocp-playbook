@@ -1,0 +1,147 @@
+---
+-   hosts: installer
+    vars:
+        personal_dirname: "<Replace With dirname, ie 'seth'>"
+        oc_client: "<Replace with link to oc client image>"
+        oc_install: "<Replace with link to oc client image>"
+        oc_client_file: "openshift-client-linux.tar.gz" # I used images without the version number in the name, feel free to replace
+        oc_install_file: "openshift-install-linux.tar.gz" # I used images without the version number in the name, feel free to replace
+        local_dir: "<replace with LOCAL directory" # location where base64 files will be saved
+        local_append_bootstrap: "append-bootstrap.ign" # local version of file, feel to rename
+        local_install_config: "install-config.yaml" # local version of file, feel to rename
+    tasks:
+    -   name: Create Project Directory - {{ personal_dirname }}
+        file:
+            path: "/opt/{{ personal_dirname }}"
+            state: directory
+    -   name: Create Symbolic Link - {{ personal_dirname }}
+        file:
+            src: "/opt/{{ personal_dirname }}"
+            path: "/var/www/html/{{ personal_dirname }}"
+            state: link
+        become: yes
+    -   name: Get OC Client Tar File
+        get_url:
+            url: "{{ oc_client }}"
+            dest: "/opt"
+    -   name: Get OC Install Tar File
+        get_url:
+            url: "{{ oc_install }}"
+            dest: "/opt"
+    -   name: Unpack OC Client Tar File
+        unarchive:
+            src: "/opt/{{ oc_client_file }}"
+            dest: "/opt"
+            remote_src: yes
+            creates: "/opt/oc"
+    -   name: Unpack OC Install Tar File
+        unarchive:
+            src: "/opt/{{ oc_install_file }}"
+            dest: "/opt"
+            remote_src: yes
+            creates: "/opt/openshift-install"
+    -   name: Copy OC Binary to Bin
+        copy:
+            src: "/opt/oc"
+            dest: "/usr/local/bin"
+            remote_src: yes
+            mode: "755" # ensures file is executable after install is complete
+        become: yes
+    -   name: Copy Kubectl Binary to Bin
+        copy:
+            src: "/opt/kubectl"
+            dest: "/usr/local/bin"
+            remote_src: yes
+            mode: "755" # ensures file is executable after install is complete
+        become: yes
+    -   name: Generate SSH Keys
+        command: ssh-keygen -t rsa -f ~/.ssh/id_rsa -b 4096 -N ''
+        args:
+            creates: "~/.ssh/id_rsa"
+    -   name: Enable SSH agent & Add private key to ssh-agent
+        shell: |
+            eval $(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa
+    -   name: Set SSH Key Contents to Ansible variable # slurp is base64 encoded by default
+        slurp:
+            src: "~/.ssh/id_rsa.pub"
+        register: slurped_pub_key
+    -   name: Decode Key and Store # decodes key, removes "\n" character, sets as new variable
+        set_fact:
+            copied_pub_key: "{{ slurped_pub_key.content | b64decode | replace('\n', '')}}"
+    -   name: Copy Install Config
+        copy: 
+            src: "{{ local_install_config }}"
+            dest: "/opt/{{ personal_dirname }}/install-config.yaml"
+    -   name: Replace Temp Key with Actual Key
+        replace:
+            path: "/opt/{{ personal_dirname }}/install-config.yaml"
+            regexp: "REPLACE_WITH_KEYGEN"
+            replace: "{{ copied_pub_key }}"
+    -   name: Unset Copied Key from RAM
+        set_fact:
+            copied_pub_key: 
+            slurped_pub_key: 
+    # -   name: Debug Slurp Module Key TWO 
+    #     debug: var=slurped_pub_key
+    -   name: Execute 'Create Manifests' Install Script
+        command: "./openshift-install create manifests --dir=./{{ personal_dirname }}"
+        args:
+            chdir: "/opt"
+    -   name: Replace mastersSchedulable 'true' with 'false'
+        replace:
+            path: "/opt/{{ personal_dirname }}/manifests/cluster-scheduler-02-config.yml"
+            regexp: "mastersSchedulable: true$"
+            replace: "mastersSchedulable: false"
+    -   name: Execute 'Create Ignition Configs' Install Script
+        command: "./openshift-install create ignition-configs --dir=./{{ personal_dirname }}"
+        args:
+            chdir: "/opt"
+    -   name: Copy Append Bootstrap
+        copy: 
+            src: "{{ local_append_bootstrap }}"
+            dest: "/opt/{{ personal_dirname }}/append-bootstrap.ign"
+    -   name: Base64 encode Append Bootstrap Ign File
+        shell: "base64 -w0 append-bootstrap.ign > append-bootstrap.base64"
+        args:
+            chdir: "/opt/{{ personal_dirname }}"
+            creates: "/opt/{{ personal_dirname }}/append-bootstrap.base64"
+    -   name: Base64 encode Master Ignn File
+        shell: "base64 -w0 master.ign > master.base64"
+        args:
+            chdir: "/opt/{{ personal_dirname }}"
+            creates: "/opt/{{ personal_dirname }}/master.base64"
+    -   name: Base64 encode Worker Ignition File
+        shell: "base64 -w0 worker.ign > worker.base64"
+        args:
+            chdir: "/opt/{{ personal_dirname }}"
+            creates: "/opt/{{ personal_dirname }}/worker.base64"
+    -   name: Fetch Append Bootstrap Ign to Local
+        fetch:
+            src: "/opt/{{ personal_dirname }}/append-bootstrap.base64"
+            dest: "{{ local_dir }}/append-bootstrap.base64"
+            flat: yes
+    -   name: Fetch Master Ign To Local
+        fetch:
+            src: "/opt/{{ personal_dirname }}/master.base64"
+            dest: "{{ local_dir }}/master.base64"
+            flat: yes
+    -   name: Fetch Worker Ign To Local
+        fetch:
+            src: "/opt/{{ personal_dirname }}/worker.base64"
+            dest: "{{ local_dir }}/worker.base64"
+            flat: yes
+    -   name: Make Sure Bootstrap.ign is Readable
+        file:
+            path: "/opt/{{ personal_dirname }}/bootstrap.ign"
+            mode: "644" # ensures bootstrap.ign is readable from the other VMs
+    -   name: Pause for External Configurations
+        pause:
+            prompt: "In vSphere: Add base64 encodes to all VMs && boot VMs before continuing"
+    -   name: Execute 'Openshift Bootstrap' Install Script
+        command: "./openshift-install --dir=./{{ personal_dirname }} wait-for bootstrap-complete --log-level info"
+        register: info_logs
+        args:
+            chdir: "/opt"
+    -   name: Display Openshift Install Logs   
+        debug: "{{ info_logs }}"
