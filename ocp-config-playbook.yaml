@@ -87,8 +87,6 @@
         set_fact:
             copied_pub_key: 
             slurped_pub_key: 
-    # -   name: Debug Slurp Module Key TWO 
-    #     debug: var=slurped_pub_key
     -   name: Execute 'Create Manifests' Install Script
         command: "./openshift-install create manifests --dir=./{{ personal_dirname }}"
         args:
