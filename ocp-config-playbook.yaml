@@ -1,12 +1,12 @@
 ---
 -   hosts: installer
     vars:
-        personal_dirname: "<Replace With dirname, ie 'seth'>"
+        personal_dirname: "<Replace With dirname, ie 'seth'>" # will become the name of folder on installer VM
         oc_client: "<Replace with link to oc client image>"
         oc_install: "<Replace with link to oc client image>"
         oc_client_file: "openshift-client-linux.tar.gz" # I used images without the version number in the name, feel free to replace
         oc_install_file: "openshift-install-linux.tar.gz" # I used images without the version number in the name, feel free to replace
-        local_dir: "<replace with LOCAL directory" # location where base64 files will be saved
+        local_dir: "<replace with LOCAL directory>" # location where base64 files will be saved, probably whatever folder this is saved in
         local_append_bootstrap: "append-bootstrap.ign" # local version of file, feel to rename
         local_install_config: "install-config.yaml" # local version of file, feel to rename
     tasks:

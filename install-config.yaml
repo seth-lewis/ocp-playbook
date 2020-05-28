@@ -1,0 +1,21 @@
+apiVersion: v1
+baseDomain: ocp.csplab.local
+compute:
+- hyperthreading: Enabled   
+  name: worker
+  replicas: 0
+controlPlane:
+  hyperthreading: Enabled   
+  name: master
+  replicas: 3
+metadata:
+  name: seth
+platform:
+  vsphere:
+    vcenter: vcsa.csplab.local
+    username: <vSphere Username>
+    password: <vSphere Password>
+    datacenter: CSPLAB
+    defaultDatastore: SANDBOX_TIER4
+pullSecret: '<Contents Of Your Pull Secret>'
+sshKey: 'KEYGEN_HERE'
