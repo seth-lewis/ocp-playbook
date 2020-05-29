@@ -1,5 +1,5 @@
 # ocp-playbook v0.1.0
-Ansible Playbook for Installing OCP on vSphere, version 0.1.0. Expect scripts included to change
+Ansible Playbook for Installing OCP on vSphere, version 0.1.0. Expect included playbooks to change frequently prior to 1.0.0.
 
 ## Notes
 1. This playbook will not "provision" any resources, it will "configure" resources that you have already provisioned
