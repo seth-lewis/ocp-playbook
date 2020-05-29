@@ -3,7 +3,7 @@
   "config": {
     "append": [
       {
-        "source": "http://<installer IP address>/<personal dirname>/bootstrap.ign",
+        "source": "http://AUTOREPLACE_HOSTNAME/AUTOREPLACE_PERSONAL_DIRNAME/bootstrap.ign",
         "verification": {}
       }
     ]
