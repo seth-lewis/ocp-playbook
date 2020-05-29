@@ -8,21 +8,21 @@
             src: "{{ local_haproxy_config }}"
             dest: "/etc/haproxy/haproxy.cfg"
             mode: "644" # ensures standard access isnt changed during the copy
-            become: yes
-    -   name: Start service 'haproxy', if not started
-        service:
+        become: yes
+    -   name: Restart service 'haproxy'
+        systemd:
             name: haproxy
             state: restarted
+            daemon_reload: yes
+        become: yes
 -   hosts: installer
     vars:
-        personal_dirname: "<Replace With dirname, ie 'seth'>" # will become the name of folder on installer VM
-        oc_client: "<Replace with link to oc client image>"
-        oc_install: "<Replace with link to oc client image>"
+        personal_dirname: "seth" # will become the name of folder on installer VM
+        oc_client: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.3.23/openshift-client-linux.tar.gz" # Feel free to repleace with a different version
+        oc_install: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.3.23/openshift-install-linux.tar.gz" # Feel free to repleace with a different version
         oc_client_file: "openshift-client-linux.tar.gz" # I used images without the version number in the name, feel free to replace
         oc_install_file: "openshift-install-linux.tar.gz" # I used images without the version number in the name, feel free to replace
         local_dir: "<replace with LOCAL directory>" # location where base64 files will be saved, probably whatever folder this is saved in
-        local_append_bootstrap: "append-bootstrap.ign" # local version of file, feel to rename
-        local_install_config: "install-config.yaml" # local version of file, feel to rename
     tasks:
     -   name: Create Project Directory - {{ personal_dirname }}
         file:
@@ -85,7 +85,7 @@
             copied_pub_key: "{{ slurped_pub_key.content | b64decode | replace('\n', '')}}"
     -   name: Copy Install Config
         copy: 
-            src: "{{ local_install_config }}"
+            src: "install-config.yaml"
             dest: "/opt/{{ personal_dirname }}/install-config.yaml"
     -   name: Replace Name Placeholder with Project Dirname
         replace:
@@ -116,8 +116,18 @@
             chdir: "/opt"
     -   name: Copy Append Bootstrap
         copy: 
-            src: "{{ local_append_bootstrap }}"
+            src: "append-bootstrap.ign"
             dest: "/opt/{{ personal_dirname }}/append-bootstrap.ign"
+    -   name: Replace Host Placeholder with Installer Name from Inventory
+        replace:
+            path: "/opt/{{ personal_dirname }}/append-bootstrap.ign"
+            regexp: "AUTOREPLACE_HOSTNAME"
+            replace: "{{ inventory_hostname }}"
+    -   name: Replace Name Placeholder with Project Dirname
+        replace:
+            path: "/opt/{{ personal_dirname }}/append-bootstrap.ign"
+            regexp: "AUTOREPLACE_PERSONAL_DIRNAME"
+            replace: "{{ personal_dirname }}"
     -   name: Base64 encode Append Bootstrap Ign File
         shell: "base64 -w0 append-bootstrap.ign > append-bootstrap.base64"
         args:
@@ -160,5 +170,8 @@
         register: info_logs
         args:
             chdir: "/opt"
+    -   name: Get Openshift Install Logs   
+        shell: cat /opt/{{ personal_dirname }}/.openshift_install.log | grep -B 1 "It is now safe to remove the bootstrap resources"
+        register: success
     -   name: Display Openshift Install Logs   
-        debug: "{{ info_logs }}"
+        debug: var=success.stdout_lines
