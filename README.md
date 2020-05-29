@@ -6,6 +6,7 @@ Ansible Playbook for Installing OCP on vSphere, version 0.1.0. Expect included p
 1. Loadbalancers:
     1. If you have ONE loadbalancer, use the `ocp-installer-lb-playbook.yaml` file when executing your playbook. It will configure your loadbalancer and your installer.
     1. If you have multiple LB, use `ocp-installer-playbook.yaml` when executing your playbook. You will need configure your load balancers manually. 
+1. This playbook will be executed from your local machine, not the install VM.
 
 ### Assumptions & Requirements
 1. You are attempting to do this install on **_VMware vSphere_** under CSPLAB
