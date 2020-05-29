@@ -32,3 +32,5 @@ ansible-playbook -i inventory.cfg -u <remote_user_name> \
     1. `append-bootstrap.base64` goes with your bootstrap machine
     1. `master.base64` goes with your master/control-plane machines
     1. `worker.base64` goes with your worker & storage machines
+1. After Playbook Completion:
+    1. Login to the installer and export your KUBECONFIG (`export KUBECONFIG=/opt/<name>/auth/kubeconfig`). After that, continue with whatever you would normally do from this point on.
